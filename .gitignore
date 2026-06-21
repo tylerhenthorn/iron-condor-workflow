@@ -1,0 +1,9 @@
+# Data artifacts (chain snapshots + position DB are local state)
+data/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
