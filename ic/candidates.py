@@ -48,14 +48,16 @@ def _nearest_by_strike(legs: pd.DataFrame, strike: float) -> Optional[pd.Series]
     return legs.iloc[(legs["strike"] - strike).abs().argmin()]
 
 
-def _candidate_for_expiration(exp_df: pd.DataFrame, cfg: Config, ticker: str) -> Optional[dict]:
+def _candidate_for_expiration(exp_df: pd.DataFrame, cfg: Config, ticker: str,
+                              put_delta: float, call_delta: float) -> Optional[dict]:
     puts = exp_df[exp_df["type"] == "P"]
     calls = exp_df[exp_df["type"] == "C"]
     if puts.empty or calls.empty:
         return None
 
-    short_put = _nearest_by_delta(puts, -cfg.target_delta)
-    short_call = _nearest_by_delta(calls, cfg.target_delta)
+    # put_delta / call_delta are absolute targets; a skewed condor uses different values.
+    short_put = _nearest_by_delta(puts, -abs(put_delta))
+    short_call = _nearest_by_delta(calls, abs(call_delta))
     if short_put is None or short_call is None:
         return None
 
@@ -119,12 +121,21 @@ def _candidate_for_expiration(exp_df: pd.DataFrame, cfg: Config, ticker: str) ->
     }
 
 
-def build_condor_candidates(chain_df: pd.DataFrame, cfg: Config = DEFAULT, ticker: str = "") -> list[dict]:
-    """Return one candidate condor per eligible expiration, ranked best-first by score."""
+def build_condor_candidates(chain_df: pd.DataFrame, cfg: Config = DEFAULT, ticker: str = "",
+                            put_delta: Optional[float] = None,
+                            call_delta: Optional[float] = None) -> list[dict]:
+    """Return one candidate condor per eligible expiration, ranked best-first by score.
+
+    ``put_delta`` / ``call_delta`` override the short-strike delta targets per side
+    (defaulting to ``cfg.target_delta``); pass different values to build a skewed condor.
+    """
+    pd_target = cfg.target_delta if put_delta is None else put_delta
+    cd_target = cfg.target_delta if call_delta is None else call_delta
     eligible = chain_df[(chain_df["dte"] >= cfg.dte_min) & (chain_df["dte"] <= cfg.dte_max)]
     candidates = []
     for exp in sorted(eligible["expiration"].unique()):
-        cand = _candidate_for_expiration(eligible[eligible["expiration"] == exp], cfg, ticker)
+        cand = _candidate_for_expiration(
+            eligible[eligible["expiration"] == exp], cfg, ticker, pd_target, cd_target)
         if cand is not None:
             candidates.append(cand)
     candidates.sort(key=lambda c: c["score"], reverse=True)

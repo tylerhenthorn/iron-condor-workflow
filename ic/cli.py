@@ -59,15 +59,20 @@ def cmd_recommend(args):
     cfg = _build_config(args)
     ticker = args.ticker.upper()
     chain_df = chain.load_chain(ticker) if args.no_fetch else chain.fetch_chain(ticker, cfg)
-    cands = candidates.build_condor_candidates(chain_df, cfg, ticker)[: args.top]
+    cands = candidates.build_condor_candidates(
+        chain_df, cfg, ticker, put_delta=args.put_delta, call_delta=args.call_delta)[: args.top]
     if args.json:
         print(json.dumps(cands, indent=2, default=str))
         return
     if not cands:
         print(f"No eligible condors for {ticker} in {cfg.dte_min}-{cfg.dte_max} DTE window.")
         return
+    pd_t = args.put_delta if args.put_delta is not None else cfg.target_delta
+    cd_t = args.call_delta if args.call_delta is not None else cfg.target_delta
+    delta_desc = (f"~{pd_t:.2f}-delta shorts" if pd_t == cd_t
+                  else f"skewed shorts (put ~{pd_t:.2f} / call ~{cd_t:.2f})")
     print(f"Top {len(cands)} iron condor candidates for {ticker} "
-          f"(~{cfg.target_delta:.2f}-delta shorts, {cfg.dte_min}-{cfg.dte_max} DTE):\n")
+          f"({delta_desc}, {cfg.dte_min}-{cfg.dte_max} DTE):\n")
     for i, c in enumerate(cands, 1):
         print(f"[{i}] {c['expiration']} ({c['dte']} DTE)  underlying={c['underlying']}")
         print(f"    legs: -{c['put_long_strike']:.0f}P / +{c['put_short_strike']:.0f}P "
@@ -140,6 +145,25 @@ def cmd_analyze(args):
         print(f"    triggers: {flags}\n")
 
 
+def cmd_regime(args):
+    from . import market
+    cfg = _build_config(args)
+    r = market.regime(args.ticker.upper(), lookback=args.lookback, cfg=cfg)
+    if args.json:
+        print(json.dumps(r, indent=2, default=str))
+        return
+    rv = r["realized_vol"]
+    print(f"{r['ticker']} regime as of {r['asof']}  (lookback {r['lookback']})")
+    print(f"  spot {r['spot']}   SMA20 {r['sma20']}   SMA50 {r['sma50']}   trend: {r['trend'].upper()}")
+    print(f"  realized vol: 21d {rv['d21']}%  63d {rv['d63']}%  126d {rv['d126']}%   regime: {r['vol_regime'].upper()}")
+    print(f"  ATM IV {r['atm_iv']}% ({r['atm_iv_dte']}d to {r['atm_iv_expiration']})  "
+          f"IV-RV premium {r['iv_rv_premium']:+}pts ({r['premium_label']})")
+    print(f"  expected 1SD move to {r['atm_iv_dte']}d: +/- {r['expected_move_1sd']} pts")
+    for label, w in r["windows"].items():
+        print(f"  {label[1:]+'d':>5}: low {w['low']}  high {w['high']}  range {w['range_pct']}%  change {w['change_pct']:+}%")
+    print(f"  max drawdown 63d: {r['max_drawdown_63d_pct']}%")
+
+
 def cmd_close(args):
     from . import positions
     realized = positions.close(args.id, args.debit, args.date)
@@ -162,6 +186,10 @@ def build_parser() -> argparse.ArgumentParser:
     pr.add_argument("--top", type=int, default=5)
     pr.add_argument("--json", action="store_true")
     pr.add_argument("--no-fetch", action="store_true", help="Use cached chain CSV instead of fetching")
+    pr.add_argument("--put-delta", dest="put_delta", type=float, default=None,
+                    help="Override short-PUT target delta (skewed condor)")
+    pr.add_argument("--call-delta", dest="call_delta", type=float, default=None,
+                    help="Override short-CALL target delta (skewed condor)")
     _add_config_flags(pr)
     pr.set_defaults(func=cmd_recommend)
 
@@ -189,6 +217,13 @@ def build_parser() -> argparse.ArgumentParser:
     pan.add_argument("--no-fetch", action="store_true", help="Use cached chain CSV instead of fetching")
     _add_config_flags(pan)
     pan.set_defaults(func=cmd_analyze)
+
+    pg = sub.add_parser("regime", help="Analyze recent price history + implied/realized volatility")
+    pg.add_argument("--ticker", default="SPY")
+    pg.add_argument("--lookback", default="6mo", help="yfinance history period (e.g. 3mo, 6mo, 1y)")
+    pg.add_argument("--json", action="store_true")
+    _add_config_flags(pg)
+    pg.set_defaults(func=cmd_regime)
 
     pc = sub.add_parser("close", help="Close a position and record realized P&L")
     pc.add_argument("--id", type=int, required=True)

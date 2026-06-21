@@ -44,6 +44,18 @@ Fires **delta / strike-breach** triggers (`DELTA_BREACH_*`, `STRIKE_TOUCHED_*`,
 `GAMMA_RISK`, `PROFIT_TARGET`). Invoke the **`analyze-positions`** Claude skill to turn
 those into roll / close / hold recommendations.
 
+### Regime-aware recommendation
+```bash
+python -m ic.cli regime --ticker SPY --lookback 6mo        # trend + realized/implied vol read
+python -m ic.cli recommend --ticker SPY --no-fetch \
+  --put-delta 0.16 --call-delta 0.10 --wing-width 10        # skewed condor (leans with the trend)
+```
+The **`condor-from-history`** Claude skill chains these: it reads the regime (trend, vol
+level, IV-vs-RV premium), chooses delta/wings/skew from it, then recommends a condor and
+explains the reasoning. Use it when you want the parameters picked from the data rather
+than supplied. `--put-delta`/`--call-delta` build a **skewed** condor; pass them equal (or
+use `--target-delta`) for a symmetric one.
+
 ## Other commands
 ```bash
 python -m ic.cli fetch --ticker SPY     # write data/SPY_chain.csv
