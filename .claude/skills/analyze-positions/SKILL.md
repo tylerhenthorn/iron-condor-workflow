@@ -52,3 +52,10 @@ management recommendations. The Python recomputes live greeks and P&L; you decid
 - If a position shows `EXPIRED_OR_MISSING`, tell the user it expired or is no longer listed
   and should be reconciled/closed in the tracker.
 - Mention `cost_to_close` so the user knows the current debit to exit.
+- **Settlement matters for management.** SPX/XSP are cash-settled European options — no
+  early-assignment or pin risk, so a tested short strike can be managed right up to expiry
+  (a `STRIKE_TOUCHED` flag is about P&L/breach, not assignment). SPY and single names are
+  American/physically-settled: a tested or ITM short leg carries real early-assignment risk
+  (especially short calls near ex-dividend), so weight defense/close recommendations more
+  urgently for those. Index OI is under-reported by yfinance — judge exit liquidity by
+  spread, not reported open interest.

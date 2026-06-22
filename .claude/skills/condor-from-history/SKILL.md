@@ -71,7 +71,12 @@ might otherwise ask for.
 
 ## Notes
 - Only use numbers returned by the CLI — never invent prices, IV, or deltas.
-- Default `--lookback` is 6mo; honor a different window if the user names one.
+- Default ticker is SPX (cash-settled, §1256) and default `--lookback` is 6mo; honor a
+  different underlying or window if the user names one. Index aliases (SPX/XSP/...) resolve
+  to yfinance ^-symbols automatically; remember to scale `--wing-width` to the underlying's
+  price (SPX ~50, SPY/XSP ~5-10, single names ~10-25).
+- For index underlyings, yfinance under-reports open interest — judge liquidity by
+  `avg_spread_pct`, not `min_open_interest`.
 - If `iv_rv_premium` is clearly negative, say so plainly and let the user decide rather
   than forcing a marginal trade.
 - State the regime→parameter reasoning so the user can override your judgment.

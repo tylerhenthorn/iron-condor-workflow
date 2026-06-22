@@ -15,6 +15,24 @@ import yfinance as yf
 from . import greeks
 from .config import Config, DEFAULT, data_path
 
+# Cash-settled index symbols yfinance exposes under a caret. Users can type the clean
+# name (SPX, XSP, ...) on the CLI and we resolve it here.
+_YF_ALIASES = {
+    "SPX": "^SPX", "XSP": "^XSP", "NDX": "^NDX",
+    "RUT": "^RUT", "VIX": "^VIX", "DJX": "^DJI",
+}
+
+
+def to_yf(ticker: str) -> str:
+    """Map a user-facing ticker to the symbol yfinance expects (SPX -> ^SPX)."""
+    t = ticker.upper().lstrip("^")
+    return _YF_ALIASES.get(t, ticker.upper())
+
+
+def file_token(ticker: str) -> str:
+    """Filesystem-safe token for a ticker (drops the caret: ^SPX -> SPX)."""
+    return ticker.upper().lstrip("^")
+
 
 def spot_price(tkr: "yf.Ticker") -> float:
     """Latest traded price for the underlying."""
@@ -29,7 +47,7 @@ def fetch_chain(ticker: str, cfg: Config = DEFAULT, expirations=None) -> pd.Data
     ``dte``, and ``delta``. ``expirations`` may be an iterable subset of expiry strings to
     limit the fetch (used by the analyzer); defaults to all listed expirations.
     """
-    tkr = yf.Ticker(ticker)
+    tkr = yf.Ticker(to_yf(ticker))
     S = spot_price(tkr)
     today = datetime.now().date()
     listed = list(tkr.options)
@@ -59,12 +77,12 @@ def fetch_chain(ticker: str, cfg: Config = DEFAULT, expirations=None) -> pd.Data
 def write_chain(ticker: str, cfg: Config = DEFAULT) -> str:
     """Fetch and persist the chain to ``data/<ticker>_chain.csv``; return the path."""
     df = fetch_chain(ticker, cfg)
-    os.makedirs(os.path.dirname(data_path(f"{ticker}_chain.csv")), exist_ok=True)
-    path = data_path(f"{ticker.upper()}_chain.csv")
+    path = data_path(f"{file_token(ticker)}_chain.csv")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     df.to_csv(path, index=False)
     return path
 
 
 def load_chain(ticker: str) -> pd.DataFrame:
     """Load the most recently written chain CSV for ``ticker``."""
-    return pd.read_csv(data_path(f"{ticker.upper()}_chain.csv"))
+    return pd.read_csv(data_path(f"{file_token(ticker)}_chain.csv"))

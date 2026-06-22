@@ -1,13 +1,16 @@
 """Command-line front door for the iron condor toolkit.
 
-    python -m ic.cli fetch     --ticker SPY
-    python -m ic.cli recommend --ticker SPY [--json] [--top N]
-    python -m ic.cli add       --ticker SPY --expiration 2026-07-31 --contracts 1 \
-                               --put-long 590 --put-short 595 --call-short 640 --call-long 645 \
-                               --credit 1.20
+    python -m ic.cli fetch     --ticker SPX
+    python -m ic.cli recommend --ticker SPX [--json] [--top N]
+    python -m ic.cli add       --ticker SPX --expiration 2026-07-31 --contracts 1 \
+                               --put-long 6835 --put-short 6885 --call-short 7950 --call-long 8000 \
+                               --credit 6.15
     python -m ic.cli list
     python -m ic.cli analyze   [--json] [--no-fetch]
-    python -m ic.cli close     --id 1 --debit 0.55
+    python -m ic.cli close     --id 1 --debit 3.00
+
+The default underlying is SPX (cash-settled, §1256). Index aliases like SPX/XSP resolve
+to their yfinance ^-symbols automatically; pass --ticker SPY for the ETF.
 
 Strategy parameters (delta target, DTE window, wings, triggers) can be overridden on any
 command via the shared flags below; defaults live in :mod:`ic.config`.
@@ -177,12 +180,12 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="command", required=True)
 
     pf = sub.add_parser("fetch", help="Fetch and persist an option chain")
-    pf.add_argument("--ticker", default="SPY")
+    pf.add_argument("--ticker", default="SPX")
     _add_config_flags(pf)
     pf.set_defaults(func=cmd_fetch)
 
     pr = sub.add_parser("recommend", help="Recommend iron condor candidates")
-    pr.add_argument("--ticker", default="SPY")
+    pr.add_argument("--ticker", default="SPX")
     pr.add_argument("--top", type=int, default=5)
     pr.add_argument("--json", action="store_true")
     pr.add_argument("--no-fetch", action="store_true", help="Use cached chain CSV instead of fetching")
@@ -219,7 +222,7 @@ def build_parser() -> argparse.ArgumentParser:
     pan.set_defaults(func=cmd_analyze)
 
     pg = sub.add_parser("regime", help="Analyze recent price history + implied/realized volatility")
-    pg.add_argument("--ticker", default="SPY")
+    pg.add_argument("--ticker", default="SPX")
     pg.add_argument("--lookback", default="6mo", help="yfinance history period (e.g. 3mo, 6mo, 1y)")
     pg.add_argument("--json", action="store_true")
     _add_config_flags(pg)

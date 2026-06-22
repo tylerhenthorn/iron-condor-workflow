@@ -73,7 +73,7 @@ def regime(ticker: str, lookback: str = "6mo", cfg: Config = DEFAULT,
     subsequent ``recommend --no-fetch`` can reuse it without a second download.
     """
     ticker = ticker.upper()
-    tkr = yf.Ticker(ticker)
+    tkr = yf.Ticker(chain_mod.to_yf(ticker))
     hist = tkr.history(period=lookback)
     close = hist["Close"]
     spot = float(close.iloc[-1])
@@ -99,7 +99,7 @@ def regime(ticker: str, lookback: str = "6mo", cfg: Config = DEFAULT,
     # `recommend --no-fetch` can reuse it without a second download.
     chain_df = chain_mod.fetch_chain(ticker, cfg)
     if persist_chain:
-        path = data_path(f"{ticker}_chain.csv")
+        path = data_path(f"{chain_mod.file_token(ticker)}_chain.csv")
         os.makedirs(os.path.dirname(path), exist_ok=True)
         chain_df.to_csv(path, index=False)
 

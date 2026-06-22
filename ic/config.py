@@ -20,7 +20,10 @@ class Config:
     target_delta: float = 0.10   # short strikes placed near this absolute delta (~1.3 SD)
     dte_min: int = 30            # minimum days-to-expiration for entry
     dte_max: int = 45            # maximum days-to-expiration for entry
-    wing_width: float = 5.0      # distance (in strike points) from short to long leg
+    # Wing width is in index points, so it scales with the underlying's price. Default is
+    # tuned for the default underlying SPX (~$7,500; strikes ~$25 apart out at 10-delta);
+    # override for cheaper names (e.g. SPY/XSP ~5-10, AAPL ~10-25).
+    wing_width: float = 50.0     # distance (in strike points) from short to long leg
 
     # --- Management triggers ---
     defense_delta: float = 0.30  # short-strike |delta| at/above this fires DELTA_BREACH

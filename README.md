@@ -1,7 +1,8 @@
 # iron-condor-claude-workflow
 
-A small toolkit for selling iron condors on SPY (or any optionable ticker), built as a
-**hybrid** of deterministic Python and Claude judgment layers:
+A small toolkit for selling iron condors on **SPX** (the default — cash-settled, §1256
+tax, no early-assignment risk) or any optionable ticker, built as a **hybrid** of
+deterministic Python and Claude judgment layers:
 
 - **Python** (`ic/` package) does everything mechanical: pull the option chain, compute
   Black-Scholes greeks, generate condor candidates, keep a CSV database of open positions,
@@ -10,6 +11,12 @@ A small toolkit for selling iron condors on SPY (or any optionable ticker), buil
   considering liquidity, and recommend defensive actions on open trades.
 
 No broker API — fills are entered manually. Schema and code are multi-ticker.
+
+**Underlying:** the default is **SPX**. Index aliases (`SPX`, `XSP`, `NDX`, ...) resolve
+to their yfinance `^`-symbols automatically; pass `--ticker SPY` for the ETF. `--wing-width`
+is in index points, so scale it to the underlying's price (SPX ~50, SPY/XSP ~5–10, single
+names ~10–25). Note: yfinance under-reports **open interest for index options** (often 0) —
+judge index liquidity by bid/ask spread, not reported OI.
 
 ## Install
 
@@ -21,18 +28,18 @@ pip install -r requirements.txt   # yfinance, pandas (numpy already present)
 
 ### 1. Recommend a condor
 ```bash
-python -m ic.cli recommend --ticker SPY            # human-readable, top 5
-python -m ic.cli recommend --ticker SPY --json     # for the skill to consume
+python -m ic.cli recommend            # SPX by default, human-readable, top 5
+python -m ic.cli recommend --json     # for the skill to consume
 ```
-Targets ~0.10-delta short strikes, 30–45 DTE, $5 wings by default. Or invoke the
-**`recommend-condor`** Claude skill for a single, liquidity-aware pick with rationale.
+Targets ~0.10-delta short strikes, 30–45 DTE, $50 wings by default (SPX scale). Or invoke
+the **`recommend-condor`** Claude skill for a single, liquidity-aware pick with rationale.
 
 ### 2. Track open condors (CSV database — `data/positions.csv`)
 ```bash
-python -m ic.cli add --ticker SPY --expiration 2026-07-31 --contracts 1 \
-  --put-long 590 --put-short 595 --call-short 640 --call-long 645 --credit 1.20
+python -m ic.cli add --ticker SPX --expiration 2026-07-31 --contracts 1 \
+  --put-long 6835 --put-short 6885 --call-short 7950 --call-long 8000 --credit 6.15
 python -m ic.cli list
-python -m ic.cli close --id 1 --debit 0.55         # records realized P&L
+python -m ic.cli close --id 1 --debit 3.00         # records realized P&L
 ```
 
 ### 3. Analyze open condors
@@ -46,9 +53,9 @@ those into roll / close / hold recommendations.
 
 ### Regime-aware recommendation
 ```bash
-python -m ic.cli regime --ticker SPY --lookback 6mo        # trend + realized/implied vol read
-python -m ic.cli recommend --ticker SPY --no-fetch \
-  --put-delta 0.16 --call-delta 0.10 --wing-width 10        # skewed condor (leans with the trend)
+python -m ic.cli regime --lookback 6mo                     # SPX trend + realized/implied vol read
+python -m ic.cli recommend --no-fetch \
+  --put-delta 0.16 --call-delta 0.10 --wing-width 50        # skewed condor (leans with the trend)
 ```
 The **`condor-from-history`** Claude skill chains these: it reads the regime (trend, vol
 level, IV-vs-RV premium), chooses delta/wings/skew from it, then recommends a condor and
@@ -58,6 +65,7 @@ use `--target-delta`) for a symmetric one.
 
 ## Other commands
 ```bash
+python -m ic.cli fetch                  # SPX by default -> data/SPX_chain.csv
 python -m ic.cli fetch --ticker SPY     # write data/SPY_chain.csv
 ```
 
@@ -68,7 +76,7 @@ Defaults live in `ic/config.py` and can be overridden on any command:
 |------|---------|---------|
 | `--target-delta` | 0.10 | short-strike target delta |
 | `--dte-min` / `--dte-max` | 30 / 45 | entry DTE window |
-| `--wing-width` | 5.0 | strike points from short to long leg |
+| `--wing-width` | 50.0 | strike points from short to long leg (SPX scale; lower for cheaper underlyings) |
 | `--defense-delta` | 0.30 | short-strike \|delta\| that fires `DELTA_BREACH` |
 | `--min-dte-hold` | 21 | DTE that fires `GAMMA_RISK` |
 | `--profit-take-pct` | 0.50 | credit fraction that fires `PROFIT_TARGET` |
