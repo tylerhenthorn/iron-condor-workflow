@@ -2,7 +2,9 @@
 
 ## TL;DR
 
-Two Claude slash commands do the day-to-day work:
+A small toolkit for selling iron condors on **SPX** (the default — cash-settled, §1256
+tax, no early-assignment risk) or any optionable ticker, built as a **hybrid** of
+deterministic Python and Claude judgment layers:
 
 - **`/iron-condor`** — reads the recent price history and vol regime for an underlying
   (SPX by default) and recommends a condor — strikes, wings, and skew tuned to the data,
@@ -21,10 +23,6 @@ Two Claude slash commands do the day-to-day work:
 Typical loop: run `/iron-condor` to get a recommendation → record the fill with
 `python -m ic.cli add ...` → run `/analyze-positions` whenever you want to check on open
 trades. Everything below is the underlying CLI the skills drive.
-
-A small toolkit for selling iron condors on **SPX** (the default — cash-settled, §1256
-tax, no early-assignment risk) or any optionable ticker, built as a **hybrid** of
-deterministic Python and Claude judgment layers:
 
 - **Python** (`ic/` package) does everything mechanical: pull the option chain, compute
   Black-Scholes greeks, generate condor candidates, keep a CSV database of open positions,
