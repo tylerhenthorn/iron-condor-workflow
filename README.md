@@ -1,4 +1,4 @@
-# iron-condor-claude-workflow
+# iron-condor-workflow
 
 A small toolkit for selling iron condors on **SPX** (the default — cash-settled, §1256
 tax, no early-assignment risk) or any optionable ticker, built as a **hybrid** of
