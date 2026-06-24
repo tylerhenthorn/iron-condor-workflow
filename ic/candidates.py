@@ -3,7 +3,7 @@
 Pure and deterministic: given a chain DataFrame (from :mod:`ic.chain`) and a
 :class:`~ic.config.Config`, build one candidate condor per eligible expiration by placing
 short strikes near the target delta and long wings ``wing_width`` away. The Claude
-``recommend-condor`` skill applies judgment on top of this ranked list.
+``iron-condor`` skill applies judgment on top of this ranked list.
 """
 
 from __future__ import annotations

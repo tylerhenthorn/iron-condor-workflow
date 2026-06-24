@@ -1,6 +1,6 @@
 """Market-regime analysis: recent price history + implied/realized volatility.
 
-Deterministic facts for the ``condor-from-history`` skill. ``regime()`` looks back a few
+Deterministic facts for the ``iron-condor`` skill. ``regime()`` looks back a few
 months and returns realized-vol levels, trend vs moving averages, ranges/drawdown, ATM
 implied vol, the IV-vs-RV premium, and an expected move — plus plain-English regime/trend
 labels. The skill maps these facts to strategy parameters (delta, wings, skew).

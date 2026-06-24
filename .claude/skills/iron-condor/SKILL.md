@@ -1,5 +1,5 @@
 ---
-name: condor-from-history
+name: iron-condor
 description: Analyze the last few months of an underlying's price history and implied/realized volatility, then recommend a (possibly skewed) iron condor tuned to that regime. Use when the user asks for a recommendation "based on recent history/volatility", a market-aware or regime-based condor, or wants the strategy parameters chosen from the data rather than supplied.
 ---
 

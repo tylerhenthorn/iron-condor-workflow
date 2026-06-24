@@ -32,7 +32,7 @@ python -m ic.cli recommend            # SPX by default, human-readable, top 5
 python -m ic.cli recommend --json     # for the skill to consume
 ```
 Targets ~0.10-delta short strikes, 30–45 DTE, $50 wings by default (SPX scale). Or invoke
-the **`recommend-condor`** Claude skill for a single, liquidity-aware pick with rationale.
+the **`iron-condor`** Claude skill for a single, liquidity-aware pick with rationale.
 
 ### 2. Track open condors (CSV database — `data/positions.csv`)
 ```bash
@@ -57,7 +57,7 @@ python -m ic.cli regime --lookback 6mo                     # SPX trend + realize
 python -m ic.cli recommend --no-fetch \
   --put-delta 0.16 --call-delta 0.10 --wing-width 50        # skewed condor (leans with the trend)
 ```
-The **`condor-from-history`** Claude skill chains these: it reads the regime (trend, vol
+The **`iron-condor`** Claude skill chains these: it reads the regime (trend, vol
 level, IV-vs-RV premium), chooses delta/wings/skew from it, then recommends a condor and
 explains the reasoning. Use it when you want the parameters picked from the data rather
 than supplied. `--put-delta`/`--call-delta` build a **skewed** condor; pass them equal (or
@@ -86,7 +86,7 @@ Defaults live in `ic/config.py` and can be overridden on any command:
 ```
 ic/         config, greeks, chain, candidates, positions, analyze, cli
 data/       chain snapshots + positions.csv (gitignored)
-.claude/skills/  recommend-condor, analyze-positions
+.claude/skills/  iron-condor, analyze-positions
 ```
 
 ## Out of scope (for now)
