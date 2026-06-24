@@ -1,7 +1,5 @@
 # iron-condor-workflow
 
-## TL;DR
-
 A small toolkit for selling iron condors on **SPX** or any optionable ticker, built as a **hybrid** of
 deterministic Python and Claude judgment layers:
 
@@ -100,14 +98,3 @@ Defaults live in `ic/config.py` and can be overridden on any command:
 | `--min-dte-hold` | 21 | DTE that fires `GAMMA_RISK` |
 | `--profit-take-pct` | 0.50 | credit fraction that fires `PROFIT_TARGET` |
 | `--r` | 0.045 | risk-free rate for greeks |
-
-## Layout
-```
-ic/         config, greeks, chain, candidates, positions, analyze, cli
-data/       chain snapshots + positions.csv (gitignored)
-.claude/skills/  iron-condor, analyze-positions
-```
-
-## Out of scope (for now)
-Broker/order execution, backtesting, non-condor strategies, intraday streaming. The
-multi-ticker schema leaves room to add these later.
