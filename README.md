@@ -2,8 +2,7 @@
 
 ## TL;DR
 
-A small toolkit for selling iron condors on **SPX** (the default — cash-settled, §1256
-tax, no early-assignment risk) or any optionable ticker, built as a **hybrid** of
+A small toolkit for selling iron condors on **SPX** or any optionable ticker, built as a **hybrid** of
 deterministic Python and Claude judgment layers:
 
 - **`/iron-condor`** — reads the recent price history and vol regime for an underlying
