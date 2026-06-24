@@ -1,5 +1,27 @@
 # iron-condor-workflow
 
+## TL;DR
+
+Two Claude slash commands do the day-to-day work:
+
+- **`/iron-condor`** — reads the recent price history and vol regime for an underlying
+  (SPX by default) and recommends a condor — strikes, wings, and skew tuned to the data,
+  with the reasoning. Use it to open a new trade.
+  ```
+  /iron-condor                 # regime-aware SPX pick
+  /iron-condor SPY             # any ticker
+  ```
+- **`/analyze-positions`** — reviews your open condors (from `data/positions.csv`),
+  recomputes live P&L and management triggers, and tells you whether to **roll, close, or
+  hold** each one. Use it to maintain trades you already have on.
+  ```
+  /analyze-positions
+  ```
+
+Typical loop: run `/iron-condor` to get a recommendation → record the fill with
+`python -m ic.cli add ...` → run `/analyze-positions` whenever you want to check on open
+trades. Everything below is the underlying CLI the skills drive.
+
 A small toolkit for selling iron condors on **SPX** (the default — cash-settled, §1256
 tax, no early-assignment risk) or any optionable ticker, built as a **hybrid** of
 deterministic Python and Claude judgment layers:
